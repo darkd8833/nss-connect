@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Verify NSS Digital ID</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="min-h-screen bg-slate-100 text-slate-900">
+  <main class="max-w-xl mx-auto px-4 py-10">
+    <div class="bg-white border border-slate-200 rounded-3xl shadow-xl overflow-hidden">
+      <div class="bg-slate-900 text-white p-6">
+        <p class="text-amber-300 text-xs font-bold tracking-[.18em] uppercase">National Service Scheme</p>
+        <h1 class="text-2xl font-bold mt-2">Digital ID verification</h1>
+        <p class="text-slate-300 text-sm mt-2">This page confirms the current saved NSS volunteer record.</p>
+      </div>
+      <div id="verification-loading" class="p-6 text-sm text-slate-500">Checking this Digital ID...</div>
+      <div id="verification-result" class="hidden p-6">
+        <div class="flex items-center gap-3 mb-6">
+          <div id="verification-photo-wrap" class="w-20 h-20 rounded-2xl bg-slate-100 border border-slate-200 grid place-items-center overflow-hidden">
+            <img id="verification-photo" class="hidden w-full h-full object-cover" alt="Volunteer profile photo" />
+            <span id="verification-photo-placeholder" class="text-2xl font-black text-slate-400">N</span>
+          </div>
+          <div>
+            <p id="verification-status" class="text-xs font-bold uppercase tracking-wider"></p>
+            <h2 id="verification-name" class="text-2xl font-bold mt-1"></h2>
+            <p id="verification-id" class="font-mono text-sm text-amber-700 mt-1"></p>
+          </div>
+        </div>
+        <dl class="grid sm:grid-cols-2 gap-4 text-sm">
+          <div class="bg-slate-50 rounded-xl p-4"><dt class="text-xs uppercase font-bold text-slate-500">Department</dt><dd id="verification-dept" class="font-semibold mt-1"></dd></div>
+          <div class="bg-slate-50 rounded-xl p-4"><dt class="text-xs uppercase font-bold text-slate-500">Academic year</dt><dd id="verification-year" class="font-semibold mt-1"></dd></div>
+          <div class="bg-slate-50 rounded-xl p-4"><dt class="text-xs uppercase font-bold text-slate-500">Institution</dt><dd id="verification-institution" class="font-semibold mt-1"></dd></div>
+          <div class="bg-slate-50 rounded-xl p-4"><dt class="text-xs uppercase font-bold text-slate-500">Blood group</dt><dd id="verification-blood" class="font-semibold mt-1"></dd></div>
+          <div class="bg-slate-50 rounded-xl p-4"><dt class="text-xs uppercase font-bold text-slate-500">Verified service hours</dt><dd id="verification-hours" class="font-semibold mt-1"></dd></div>
+          <div class="bg-slate-50 rounded-xl p-4"><dt class="text-xs uppercase font-bold text-slate-500">Record status</dt><dd id="verification-record-status" class="font-semibold mt-1"></dd></div>
+        </dl>
+        <p id="verification-time" class="text-xs text-slate-500 mt-6"></p>
+      </div>
+      <div id="verification-error" class="hidden p-6">
+        <p class="text-red-700 font-bold">Digital ID could not be verified</p>
+        <p id="verification-error-message" class="text-sm text-slate-600 mt-2"></p>
+      </div>
+    </div>
+    <p class="text-center text-xs text-slate-500 mt-5">NSS Connect • Serve • Learn • Lead</p>
+  </main>
+  <script>
+    const text = (id, value) => { const el = document.getElementById(id); if (el) el.textContent = value || 'Not available'; };
+    const show = (id, visible) => document.getElementById(id)?.classList.toggle('hidden', !visible);
+    async function verify() {
+      const id = new URLSearchParams(window.location.search).get('id');
+      if (!id) throw new Error('No NSS Digital ID was supplied.');
+      const response = await fetch(`/api/verify/${encodeURIComponent(id)}`);
+      const data = await response.json();
+      if (!response.ok || !data.valid) throw new Error(data.message || 'Digital ID not found.');
+      const volunteer = data.volunteer;
+      text('verification-status', '✓ Verified NSS volunteer');
+      document.getElementById('verification-status').className = 'text-xs font-bold uppercase tracking-wider text-emerald-700';
+      text('verification-name', volunteer.name);
+      text('verification-id', volunteer.id);
+      text('verification-dept', volunteer.dept);
+      text('verification-year', volunteer.year);
+      text('verification-institution', volunteer.institution);
+      text('verification-blood', volunteer.blood);
+      text('verification-hours', `${volunteer.hours || 0} hours`);
+      text('verification-record-status', volunteer.status);
+      text('verification-time', `Verified at ${new Date(data.verifiedAt).toLocaleString()}`);
+      if (volunteer.photo) {
+        const image = document.getElementById('verification-photo');
+        image.src = volunteer.photo;
+        image.classList.remove('hidden');
+        document.getElementById('verification-photo-placeholder')?.classList.add('hidden');
+      }
+      show('verification-loading', false);
+      show('verification-result', true);
+    }
+    verify().catch((error) => {
+      show('verification-loading', false);
+      show('verification-error', true);
+      text('verification-error-message', error.message);
+    });
+  </script>
+</body>
+</html>
