@@ -1,0 +1,13 @@
+{
+  "name": "nss-digital-management-system",
+  "version": "1.0.0",
+  "private": true,
+  "description": "NSS Digital Management System hackathon app",
+  "scripts": {
+    "start": "node files/server.js",
+    "init-db": "node files/init-db.js"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
