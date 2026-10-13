@@ -7,7 +7,7 @@ A runnable hackathon prototype for volunteer registration, service events, atten
 Requirements: Node.js 18 or newer. No npm package installation is required.
 
 ```bash
-cd /Users/s.naveenkrishna/Downloads/studio/nss
+cd /Users/username/Downloads/studio/nss
 npm run init-db   # optional: reset the demo data
 npm start
 ```
